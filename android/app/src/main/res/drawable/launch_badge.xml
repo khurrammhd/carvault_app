@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app-mark badge shown on the native launch screen: a 76dp rounded
+     square (Primary Container fill, matching AppColors.primaryContainer)
+     with the car glyph centered — same treatment as the Flutter-level
+     SplashScreen/LoginScreen, so the handoff from native to Flutter has no
+     visible jump. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:width="76dp"
+        android:height="76dp"
+        android:gravity="center">
+        <shape android:shape="rectangle">
+            <solid android:color="#FFE5D7" />
+            <corners android:radius="22dp" />
+        </shape>
+    </item>
+    <item
+        android:width="36dp"
+        android:height="36dp"
+        android:gravity="center"
+        android:drawable="@drawable/ic_launch_car" />
+</layer-list>
