@@ -1,0 +1,60 @@
+name: carvault
+description: >
+  CarVault — Vehicle Document Manager. Photograph, organize, and instantly
+  retrieve every document tied to a vehicle.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management + dependency injection
+  flutter_riverpod: ^2.6.1
+
+  # Routing
+  go_router: ^14.6.2
+
+  # Local storage
+  drift: ^2.21.0
+  sqlite3_flutter_libs: ^0.5.26
+  path_provider: ^2.1.5
+  path: ^1.9.0
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.3
+  rxdart: ^0.28.0
+
+  # Document capture
+  image_picker: ^1.1.2
+
+  # Networking (built, not yet called by any screen — see NOTES.md)
+  dio: ^5.7.0
+
+  # Logging
+  logger: ^2.4.0
+
+  cupertino_icons: ^1.0.8
+
+  # --- Firebase: intentionally NOT included in this build ---
+  # No real Firebase project is configured yet, so firebase_core,
+  # firebase_auth, firebase_crashlytics, and google_sign_in are left out —
+  # auth runs on FakeAuthRepository instead (in-memory, accepts any
+  # email/password). Once you've run `flutterfire configure`, add:
+  #   firebase_core: ^3.8.0
+  #   firebase_auth: ^5.3.3
+  #   firebase_crashlytics: ^4.1.5
+  #   google_sign_in: ^6.2.2
+  # and follow NOTES.md's "Wiring up real Firebase" section.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.21.0
+  build_runner: ^2.4.13
+
+flutter:
+  uses-material-design: true
