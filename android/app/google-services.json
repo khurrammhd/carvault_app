@@ -12,7 +12,20 @@
           "package_name": "com.carvault.carvault"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "770768359726-jpccksbc0g237ivjq6fgk71p36qaaoaj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.carvault.carvault",
+            "certificate_hash": "07ec3de60ce08d4ad5d809c1a04fbf909d6e0a1b"
+          }
+        },
+        {
+          "client_id": "770768359726-dhhomrg2j8jvkdvtlhu6c1mik78fimhc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDUHxM50Cj54j5aN4VKb9Mk2tM9PpuoudQ"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "770768359726-dhhomrg2j8jvkdvtlhu6c1mik78fimhc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
