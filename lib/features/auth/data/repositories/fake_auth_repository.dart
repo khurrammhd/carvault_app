@@ -18,8 +18,17 @@ import '../../domain/repositories/auth_repository.dart';
 /// change, since they only depend on the [AuthRepository] interface. See
 /// NOTES.md for the exact steps.
 class FakeAuthRepository implements AuthRepository {
-  final _controller = StreamController<UserEntity?>.broadcast();
   UserEntity? _currentUser;
+
+  // `onListen` replays the current auth state to each new subscriber the
+  // moment it starts listening — without this, the stream stays silent
+  // until the user actually logs in, and the splash screen (which waits
+  // for exactly one "are you logged in?" event before redirecting) hangs
+  // forever. A real Firebase auth stream always fires an initial event
+  // immediately; this replicates that.
+  late final StreamController<UserEntity?> _controller = StreamController<UserEntity?>.broadcast(
+    onListen: () => _controller.add(_currentUser),
+  );
 
   @override
   Stream<UserEntity?> get authStateChanges => _controller.stream;
