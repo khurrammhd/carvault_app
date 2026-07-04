@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "770768359726",
+    "project_id": "carvault-e0e9a",
+    "storage_bucket": "carvault-e0e9a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:770768359726:android:e50ca49119306f52bb6abf",
+        "android_client_info": {
+          "package_name": "com.carvault.carvault"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUHxM50Cj54j5aN4VKb9Mk2tM9PpuoudQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
