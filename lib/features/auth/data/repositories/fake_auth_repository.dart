@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rxdart/rxdart.dart';
 
 import '../../../../core/errors/result.dart';
 import '../../../../core/errors/unit.dart';
@@ -18,28 +17,25 @@ import '../../domain/repositories/auth_repository.dart';
 /// change, since they only depend on the [AuthRepository] interface. See
 /// NOTES.md for the exact steps.
 class FakeAuthRepository implements AuthRepository {
-  UserEntity? _currentUser;
-
-  // `onListen` replays the current auth state to each new subscriber the
-  // moment it starts listening — without this, the stream stays silent
-  // until the user actually logs in, and the splash screen (which waits
-  // for exactly one "are you logged in?" event before redirecting) hangs
-  // forever. A real Firebase auth stream always fires an initial event
-  // immediately; this replicates that.
-  late final StreamController<UserEntity?> _controller = StreamController<UserEntity?>.broadcast(
-    onListen: () => _controller.add(_currentUser),
-  );
+  // A plain broadcast StreamController + `onListen` replay was tried first
+  // and looked correct in isolation, but Riverpod's internal subscribe/
+  // rebuild cycle didn't reliably preserve that replay — the "replay to
+  // whichever listener subscribes first" trick is timing-sensitive and
+  // broke silently. BehaviorSubject is the right tool for "a stream with a
+  // current value": it remembers its latest value and replays it to every
+  // new subscriber unconditionally, no timing tricks required. Seeded with
+  // `null` because nobody is logged in until told otherwise.
+  final _controller = BehaviorSubject<UserEntity?>.seeded(null);
 
   @override
   Stream<UserEntity?> get authStateChanges => _controller.stream;
 
   @override
-  UserEntity? get currentUser => _currentUser;
+  UserEntity? get currentUser => _controller.value;
 
   Future<Result<UserEntity>> _fakeSignIn(String email) async {
     await Future.delayed(const Duration(milliseconds: 500));
     final user = UserEntity(id: 'demo-${email.hashCode}', email: email);
-    _currentUser = user;
     _controller.add(user);
     return Success(user);
   }
@@ -68,7 +64,6 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> logout() async {
-    _currentUser = null;
     _controller.add(null);
   }
 }

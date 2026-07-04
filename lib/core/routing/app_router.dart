@@ -1,10 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/data/repositories/fake_auth_repository.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -22,14 +19,23 @@ import 'auth_state_provider.dart';
 import 'route_paths.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
-  final refreshStream = GoRouterRefreshStream(ref.watch(authRepositoryProvider).authStateChanges);
-  ref.onDispose(refreshStream.dispose);
+  // Uses `ref.listen` on the provider itself, rather than subscribing to
+  // the raw repository stream directly. The raw stream only replays its
+  // "current value" to whichever listener subscribes *first* — and
+  // authStateProvider's own internal subscription is a second, independent
+  // listener on that same stream, which would otherwise never receive that
+  // replay and stay stuck in AsyncLoading() forever. `ref.listen` shares
+  // Riverpod's own single, already-correct subscription instead of opening
+  // a second one.
+  final refreshNotifier = _RouterRefreshNotifier();
+  ref.listen(authStateProvider, (previous, next) => refreshNotifier.notify());
+  ref.onDispose(refreshNotifier.dispose);
 
   const unauthenticatedRoutes = {RoutePaths.login, RoutePaths.register, RoutePaths.forgotPassword};
 
   return GoRouter(
     initialLocation: RoutePaths.splash,
-    refreshListenable: refreshStream,
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
       final atSplash = state.matchedLocation == RoutePaths.splash;
@@ -92,17 +98,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    notifyListeners();
-    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
-  }
-
-  late final StreamSubscription<dynamic> _subscription;
-
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
-  }
+/// A [ChangeNotifier] go_router can listen to, fed entirely by
+/// [ref.listen] rather than any raw stream subscription of its own.
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
 }
