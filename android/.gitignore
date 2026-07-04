@@ -12,3 +12,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Exception: this is a dedicated DEBUG-only keystore (see build.gradle.kts),
+# checked in on purpose so every build — local or CI — signs identically.
+# It has no release/production authority and cannot publish anything.
+!keystores/debug.keystore
