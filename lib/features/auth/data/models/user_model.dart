@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart' as fb;
+
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../domain/entities/user_entity.dart';
@@ -16,6 +18,17 @@ class UserModel {
   final String email;
   final String? displayName;
   final String? photoUrl;
+
+  /// The only place outside [FirebaseAuthDataSource] that reads Firebase's
+  /// `User` type directly.
+  factory UserModel.fromFirebaseUser(fb.User user) {
+    return UserModel(
+      id: user.uid,
+      email: user.email ?? '',
+      displayName: user.displayName,
+      photoUrl: user.photoURL,
+    );
+  }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final id = json['id'];

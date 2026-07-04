@@ -1,8 +1,18 @@
 plugins {
     id("com.android.application")
+    // Reads android/app/google-services.json and generates the resources
+    // Firebase's native SDKs read at runtime. Version is declared (with
+    // apply false) in the root-level build.gradle.kts.
+    id("com.google.gms.google-services")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// No native Firebase Gradle dependencies (firebase-bom, firebase-analytics,
+// etc.) are added here on purpose — this app uses the FlutterFire Dart
+// packages (firebase_core, firebase_auth in pubspec.yaml), which already
+// pull in the native Android bindings they need. Adding the native deps
+// Firebase's generic Android setup instructions show would be redundant.
 
 android {
     namespace = "com.carvault.carvault"

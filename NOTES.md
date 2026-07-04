@@ -3,12 +3,27 @@
 ## Current state
 
 This project was assembled from a full design → architecture → implementation
-pass (see the design docs in `../design_handoff_carvault_app/`). It is a real,
-complete Flutter project — not a prototype — with one deliberate exception:
-**there is no real Firebase project configured yet**, so authentication runs
-on `FakeAuthRepository` (in-memory, accepts any email/password) instead of
-real Firebase Auth. Everything else — local SQLite storage via Drift, the
-camera/document capture flow, search/filter, theming, navigation — is real.
+pass (see the design docs in `../design_handoff_carvault_app/`). Authentication
+is real (Firebase Auth — email/password + Google Sign-In), all local storage
+(Drift/SQLite), the camera/document capture flow, search/filter, theming, and
+navigation are real.
+
+**One file you must add yourself before this builds: `android/app/google-services.json`**,
+downloaded from your Firebase project's console (Project settings → your
+Android app). It's git-ignored on purpose (it's project-specific) and the
+Google services Gradle plugin (wired into `android/build.gradle.kts` and
+`android/app/build.gradle.kts`) will fail the build if it's missing.
+
+A permanent debug keystore lives at `android/keystores/debug.keystore` (checked
+into git on purpose — see the comment in `android/app/build.gradle.kts`) so
+every build, local or CI, signs identically. This matters specifically for
+Google Sign-In, which is tied to the signing certificate's SHA-1 fingerprint —
+register this one in your Firebase project (Project settings → your Android
+app → SHA certificate fingerprints):
+
+```
+07:EC:3D:E6:0C:E0:8D:4A:D5:D8:09:C1:A0:4F:BF:90:9D:6E:0A:1B
+```
 
 ## Building it
 
@@ -29,42 +44,16 @@ since it isn't from the Play Store.
 
 ## What works in this build
 
-- Splash → fake login/register/forgot-password → Dashboard/Vehicles/Profile
-  tab navigation
+- Splash → real Firebase login/register/forgot-password/Google Sign-In →
+  Dashboard/Vehicles/Profile tab navigation
 - Add Vehicle: real camera/gallery capture, a real validated form, and a
   real save (writes to a local SQLite database via Drift)
+- Edit Vehicle, and adding further documents to an existing vehicle
 - Vehicle List: live search + Buy/Sell/All filtering (filter choice persists
   across app restarts)
 - Vehicle Detail: real data, delete (with cascading document cleanup)
 - Document Viewer: shows the actual captured photo
 - Dashboard: real, live vehicle/document counts
-
-## Wiring up real Firebase
-
-When you're ready to replace the fake auth:
-
-1. Create a Firebase project at https://console.firebase.google.com and add
-   an Android app with package name `com.carvault.carvault`.
-2. Run `flutterfire configure` in this directory (installs `firebase_options.dart`).
-3. Add to `pubspec.yaml`:
-   ```
-   firebase_core: ^3.8.0
-   firebase_auth: ^5.3.3
-   firebase_crashlytics: ^4.1.5
-   google_sign_in: ^6.2.2
-   ```
-4. Replace `lib/features/auth/data/repositories/fake_auth_repository.dart`'s
-   `authRepositoryProvider` binding with a real Firebase-backed
-   `AuthRepositoryImpl` (wraps `FirebaseAuth` calls, translates
-   `FirebaseAuthException` into `AuthFailure`s the same way `FakeAuthRepository`
-   returns `Success`/`Failed`). Nothing in `core/routing`, the auth use cases,
-   or any screen needs to change — they only depend on the `AuthRepository`
-   interface.
-5. Restore `Firebase.initializeApp(...)` + Crashlytics wiring in
-   `lib/bootstrap.dart`.
-6. Swap `core/network/auth_token_provider.dart`'s `FakeAuthTokenProvider` for
-   a real Firebase ID-token-backed implementation if/when the (currently
-   unused) `core/network/` HTTP client gets a real backend to call.
 
 ## Known gaps (intentional, not oversights)
 
@@ -75,3 +64,7 @@ When you're ready to replace the fake auth:
   recommendation if you want to add it.
 - `core/network/`'s HTTP client (Dio, retry, timeout, token refresh) is
   fully built but not called anywhere — there's no backend yet.
+- No signing config exists for a real release build — `buildTypes.release`
+  currently reuses the debug signing config, same as Flutter's own default
+  template, purely so `flutter build apk --release` doesn't fail. Add a
+  real release keystore before ever publishing this anywhere.

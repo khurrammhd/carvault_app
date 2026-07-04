@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/auth/data/repositories/fake_auth_repository.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 
 /// Bridges the auth feature's repository to a stream [AppRouter]'s

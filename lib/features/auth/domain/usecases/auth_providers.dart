@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/repositories/fake_auth_repository.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 import 'login_with_email.dart';
 import 'login_with_google.dart';
 import 'logout.dart';

@@ -1,11 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/auth/data/services/firebase_auth_token_provider.dart';
 import '../config/environment.dart';
 import '../errors/failure.dart';
 import '../errors/result.dart';
 import '../logging/app_logger.dart';
-import 'auth_token_provider.dart';
 import 'interceptors/auth_interceptor.dart';
 import 'interceptors/logging_interceptor.dart';
 import 'interceptors/retry_interceptor.dart';
@@ -59,7 +59,7 @@ final _dioProvider = Provider<Dio>((ref) {
     receiveTimeout: const Duration(seconds: 15),
   ));
 
-  final tokenProvider = ref.watch(authTokenProviderProvider);
+  final tokenProvider = ref.watch(firebaseAuthTokenProviderProvider);
 
   dio.interceptors.addAll([
     AuthInterceptor(tokenProvider),
