@@ -12,6 +12,7 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/vehicles/presentation/add_vehicle/screens/add_vehicle_capture_screen.dart';
 import '../../features/vehicles/presentation/add_vehicle/screens/add_vehicle_details_screen.dart';
 import '../../features/vehicles/presentation/add_vehicle/screens/add_vehicle_review_screen.dart';
+import '../../features/vehicles/presentation/vehicle_detail/screens/edit_vehicle_screen.dart';
 import '../../features/vehicles/presentation/vehicle_detail/screens/vehicle_detail_screen.dart';
 import '../../features/vehicles/presentation/vehicle_list/screens/vehicle_list_screen.dart';
 import '../widgets/nav/main_navigation_shell.dart';
@@ -85,6 +86,11 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RoutePaths.vehicleDetail,
         builder: (context, state) => VehicleDetailScreen(vehicleId: state.pathParameters['vehicleId']!),
+      ),
+
+      GoRoute(
+        path: RoutePaths.vehicleEdit,
+        builder: (context, state) => EditVehicleScreen(vehicleId: state.pathParameters['vehicleId']!),
       ),
 
       GoRoute(

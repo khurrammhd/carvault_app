@@ -6,10 +6,12 @@ import 'add_document.dart';
 import 'add_vehicle.dart';
 import 'delete_document.dart';
 import 'delete_vehicle.dart';
+import 'update_vehicle.dart';
 
 final addVehicleProvider = Provider(
   (ref) => AddVehicle(ref.watch(vehicleRepositoryProvider), ref.watch(idGeneratorProvider)),
 );
+final updateVehicleProvider = Provider((ref) => UpdateVehicle(ref.watch(vehicleRepositoryProvider)));
 final deleteVehicleProvider = Provider((ref) => DeleteVehicle(ref.watch(vehicleRepositoryProvider)));
 final addDocumentProvider = Provider(
   (ref) => AddDocument(ref.watch(vehicleRepositoryProvider), ref.watch(idGeneratorProvider)),

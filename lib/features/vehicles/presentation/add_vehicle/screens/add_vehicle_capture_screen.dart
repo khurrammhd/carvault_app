@@ -12,7 +12,7 @@ class AddVehicleCaptureScreen extends ConsumerWidget {
     final file = await ImagePicker().pickImage(source: source, imageQuality: 85);
     if (file == null) return; // user cancelled — not an error
     ref.read(addVehicleDraftProvider.notifier).setPhotoPath(file.path);
-    if (context.mounted) context.go('/add-vehicle/details');
+    if (context.mounted) context.push('/add-vehicle/details');
   }
 
   @override

@@ -8,6 +8,10 @@ abstract class VehicleRepository {
 
   Future<Result<VehicleEntity>> addVehicle(VehicleEntity vehicle);
 
+  /// Updates an existing vehicle's editable fields (identified by
+  /// [vehicle.id]). Does not touch its documents.
+  Future<Result<VehicleEntity>> updateVehicle(VehicleEntity vehicle);
+
   Future<Result<Unit>> deleteVehicle(String vehicleId);
 
   Future<Result<DocumentEntity>> addDocument({

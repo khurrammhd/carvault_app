@@ -30,6 +30,10 @@ class VehicleLocalDataSource {
     return _db.into(_db.vehicles).insert(companion);
   }
 
+  Future<void> updateVehicle(VehiclesCompanion companion) {
+    return (_db.update(_db.vehicles)..where((v) => v.id.equals(companion.id.value))).write(companion);
+  }
+
   Future<void> deleteVehicleRow(String vehicleId) {
     return (_db.delete(_db.vehicles)..where((v) => v.id.equals(vehicleId))).go();
   }

@@ -55,7 +55,7 @@ class _AddVehicleDetailsScreenState extends ConsumerState<AddVehicleDetailsScree
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    context.go('/add-vehicle/review');
+    context.push('/add-vehicle/review');
   }
 
   @override

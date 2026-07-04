@@ -13,6 +13,9 @@ class RoutePaths {
   static const vehicleDetail = '/vehicles/:vehicleId';
   static String vehicleDetailPath(String vehicleId) => '/vehicles/$vehicleId';
 
+  static const vehicleEdit = '/vehicles/:vehicleId/edit';
+  static String vehicleEditPath(String vehicleId) => '/vehicles/$vehicleId/edit';
+
   static const documentViewer = '/vehicles/:vehicleId/documents/:documentIndex';
   static String documentViewerPath(String vehicleId, int documentIndex) =>
       '/vehicles/$vehicleId/documents/$documentIndex';

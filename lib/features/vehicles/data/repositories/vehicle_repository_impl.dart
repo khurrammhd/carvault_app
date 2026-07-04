@@ -55,6 +55,32 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
+  Future<Result<VehicleEntity>> updateVehicle(VehicleEntity vehicle) {
+    final modelResult = VehicleModel.create(
+      id: vehicle.id,
+      regNumber: vehicle.regNumber,
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      category: vehicle.category,
+      notes: vehicle.notes,
+      addedAt: vehicle.addedAt,
+    );
+
+    return modelResult.when(
+      success: (model) async {
+        try {
+          await _dataSource.updateVehicle(model.toCompanion());
+          return Success(model.toEntity());
+        } catch (e) {
+          return Failed(UnexpectedFailure(e.toString()));
+        }
+      },
+      failure: (f) async => Failed<VehicleEntity>(f),
+    );
+  }
+
+  @override
   Future<Result<Unit>> deleteVehicle(String vehicleId) async {
     try {
       await _dataSource.deleteVehicleRow(vehicleId);

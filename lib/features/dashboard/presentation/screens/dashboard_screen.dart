@@ -66,18 +66,27 @@ class _DashboardContent extends ConsumerWidget {
       padding: EdgeInsets.zero,
       children: [
         DashboardHeader(user: user),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, top: -28),
-          child: Row(
-            children: [
-              Expanded(child: StatCard(value: summary.totalVehicleCount, label: 'Vehicles stored')),
-              const SizedBox(width: 12),
-              Expanded(child: StatCard(value: summary.totalDocumentCount, label: 'Documents stored')),
-            ],
+        // `Transform.translate` is used instead of a negative top padding —
+        // negative EdgeInsets values trip a `RenderShiftedBox` assertion
+        // ("isNonNegative is not true") in this Flutter version. Transform
+        // only shifts the *visual* position, not the layout box, so the
+        // top padding of the section below is reduced to compensate for
+        // the space Transform doesn't reclaim.
+        Transform.translate(
+          offset: const Offset(0, -28),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(child: StatCard(value: summary.totalVehicleCount, label: 'Vehicles stored')),
+                const SizedBox(width: 12),
+                Expanded(child: StatCard(value: summary.totalDocumentCount, label: 'Documents stored')),
+              ],
+            ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
