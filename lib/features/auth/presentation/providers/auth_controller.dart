@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/result.dart';
 import '../../domain/usecases/auth_providers.dart';
 
 class AuthController extends StateNotifier<AsyncValue<void>> {
@@ -24,7 +25,15 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
     state = const AsyncData(null);
   }
 
-  Future<void> _run(Future<dynamic> Function() action) async {
+  // Generic over T (the Result's success value) so `result` keeps a real
+  // static type. A previous version typed `action` as
+  // `Future<dynamic> Function()`, which meant `result.when(...)` — an
+  // *extension* method — couldn't be resolved: extension methods are
+  // matched by static type, and `dynamic` has none, so it failed at
+  // runtime with NoSuchMethodError instead of a compile error. That broke
+  // every auth action (not just Google), since they all go through this
+  // method.
+  Future<void> _run<T>(Future<Result<T>> Function() action) async {
     state = const AsyncLoading();
     final result = await action();
     state = result.when(
