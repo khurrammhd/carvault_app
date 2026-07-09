@@ -1,5 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Explicit even though plugins (Firebase, Google Sign-In, WorkManager)
+         already merge this in transitively — the app is now deliberately
+         network-dependent (Google Drive backup), not just incidentally so. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <application
         android:label="carvault"

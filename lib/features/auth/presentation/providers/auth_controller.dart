@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/result.dart';
 import '../../domain/usecases/auth_providers.dart';
+import 'just_registered_provider.dart';
 
 class AuthController extends StateNotifier<AsyncValue<void>> {
   AuthController(this._ref) : super(const AsyncData(null));
@@ -11,10 +12,19 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   Future<void> loginWithEmail({required String email, required String password}) =>
       _run(() => _ref.read(loginWithEmailProvider)(email: email, password: password));
 
-  Future<void> register({required String email, required String password}) =>
-      _run(() => _ref.read(registerWithEmailProvider)(email: email, password: password));
+  Future<void> register({required String email, required String password}) => _run(
+        () => _ref.read(registerWithEmailProvider)(email: email, password: password),
+        onSuccess: (_) => _ref.read(justRegisteredProvider.notifier).state = true,
+      );
 
-  Future<void> loginWithGoogle() => _run(() => _ref.read(loginWithGoogleProvider)());
+  Future<void> loginWithGoogle() => _run(
+        () => _ref.read(loginWithGoogleProvider)(),
+        onSuccess: (result) {
+          if (result?.isNewUser ?? false) {
+            _ref.read(justRegisteredProvider.notifier).state = true;
+          }
+        },
+      );
 
   Future<void> sendPasswordResetEmail({required String email}) =>
       _run(() => _ref.read(sendPasswordResetEmailProvider)(email: email));
@@ -33,11 +43,14 @@ class AuthController extends StateNotifier<AsyncValue<void>> {
   // runtime with NoSuchMethodError instead of a compile error. That broke
   // every auth action (not just Google), since they all go through this
   // method.
-  Future<void> _run<T>(Future<Result<T>> Function() action) async {
+  Future<void> _run<T>(Future<Result<T>> Function() action, {void Function(T value)? onSuccess}) async {
     state = const AsyncLoading();
     final result = await action();
     state = result.when(
-      success: (_) => const AsyncData(null),
+      success: (value) {
+        onSuccess?.call(value);
+        return const AsyncData(null);
+      },
       failure: (f) => AsyncError<void>(f, StackTrace.current),
     );
   }

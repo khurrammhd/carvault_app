@@ -1,10 +1,10 @@
 import '../../../../core/errors/result.dart';
-import '../entities/user_entity.dart';
+import '../entities/google_sign_in_result.dart';
 import '../repositories/auth_repository.dart';
 
 class LoginWithGoogle {
   const LoginWithGoogle(this._repository);
   final AuthRepository _repository;
 
-  Future<Result<UserEntity?>> call() => _repository.loginWithGoogle();
+  Future<Result<GoogleSignInResult?>> call() => _repository.loginWithGoogle();
 }

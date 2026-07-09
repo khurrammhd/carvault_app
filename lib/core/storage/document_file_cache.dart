@@ -33,6 +33,20 @@ class DocumentFileCache {
     final vehicleDir = Directory(p.join(documentsDir.path, 'documents', vehicleId));
     if (await vehicleDir.exists()) await vehicleDir.delete(recursive: true);
   }
+
+  /// The root `documents/` directory every vehicle's files live under —
+  /// used by the backup feature to zip everything in one pass.
+  Future<Directory> documentsRootDir() async {
+    final documentsDir = await getApplicationDocumentsDirectory();
+    return Directory(p.join(documentsDir.path, 'documents'));
+  }
+
+  /// Deletes every cached document image. Used by restore to replace local
+  /// files with a downloaded backup's contents.
+  Future<void> clearAll() async {
+    final dir = await documentsRootDir();
+    if (await dir.exists()) await dir.delete(recursive: true);
+  }
 }
 
 final documentFileCacheProvider = Provider<DocumentFileCache>((ref) => DocumentFileCache());

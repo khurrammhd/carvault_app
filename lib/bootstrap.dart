@@ -6,11 +6,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'app/app.dart';
 import 'core/config/environment.dart';
 import 'core/logging/app_logger.dart';
 import 'core/storage/app_preferences.dart';
+import 'features/backup/data/services/backup_callback_dispatcher.dart';
+import 'features/backup/data/services/backup_workmanager_service.dart';
 
 Future<void> bootstrap(Environment environment) async {
   Environment.current = environment;
@@ -27,6 +30,17 @@ Future<void> bootstrap(Environment environment) async {
       await Firebase.initializeApp();
 
       final prefs = await SharedPreferences.getInstance();
+      final appPreferences = AppPreferences(prefs);
+
+      await Workmanager().initialize(backupCallbackDispatcher, isInDebugMode: !environment.isProduction);
+      // Defensively re-schedule on every app start: covers a scheduled
+      // task lost to a force-stop that's since been cleared by the user
+      // simply reopening the app — WorkManager gives no other signal that
+      // this happened.
+      if (appPreferences.backupEnabled) {
+        const workmanagerService = BackupWorkmanagerService();
+        await workmanagerService.scheduleNextRun(hour: appPreferences.backupHour, minute: appPreferences.backupMinute);
+      }
 
       if (environment.reportCrashes) {
         FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
@@ -43,7 +57,7 @@ Future<void> bootstrap(Environment environment) async {
       }
 
       runApp(ProviderScope(
-        overrides: [appPreferencesProvider.overrideWithValue(AppPreferences(prefs))],
+        overrides: [appPreferencesProvider.overrideWithValue(appPreferences)],
         child: const CarVaultApp(),
       ));
     },

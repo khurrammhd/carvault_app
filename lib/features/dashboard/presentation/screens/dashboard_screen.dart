@@ -7,6 +7,8 @@ import '../../../../core/routing/route_paths.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/buttons/app_fab.dart';
+import '../../../auth/presentation/providers/just_registered_provider.dart';
+import '../../../backup/presentation/widgets/connect_drive_prompt_dialog.dart';
 import '../../../vehicles/presentation/widgets/vehicle_list_item.dart';
 import '../../domain/entities/dashboard_summary.dart';
 import '../providers/dashboard_providers.dart';
@@ -22,6 +24,19 @@ class DashboardScreen extends ConsumerWidget {
     final summaryAsync = ref.watch(dashboardSummaryProvider);
     final width = MediaQuery.sizeOf(context).width;
     final contentMaxWidth = width > 600 ? 480.0 : double.infinity;
+
+    // Every freshly-authenticated user lands here per the router's redirect
+    // logic, so this is where the one-time "back up to Google Drive?"
+    // prompt fires. Re-checks the flag's *current* value inside the
+    // callback (not the value captured at build time) so scheduling this
+    // more than once across rebuilds can't show the dialog twice.
+    if (ref.watch(justRegisteredProvider)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted || !ref.read(justRegisteredProvider)) return;
+        ref.read(justRegisteredProvider.notifier).state = false;
+        showDialog(context: context, builder: (_) => const ConnectDrivePromptDialog());
+      });
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,

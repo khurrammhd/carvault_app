@@ -6,6 +6,7 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/backup/presentation/screens/settings_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/documents/presentation/screens/document_viewer_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
@@ -100,6 +101,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           initialDocumentIndex: int.parse(state.pathParameters['documentIndex']!),
         ),
       ),
+
+      GoRoute(path: RoutePaths.settings, builder: (context, state) => const SettingsScreen()),
     ],
   );
 });

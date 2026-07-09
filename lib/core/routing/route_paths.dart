@@ -9,6 +9,7 @@ class RoutePaths {
   static const dashboard = '/dashboard';
   static const vehicles = '/vehicles';
   static const profile = '/profile';
+  static const settings = '/settings';
 
   static const vehicleDetail = '/vehicles/:vehicleId';
   static String vehicleDetailPath(String vehicleId) => '/vehicles/$vehicleId';

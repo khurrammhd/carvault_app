@@ -2,7 +2,7 @@
 
 > **Purpose:** a running summary of this project for future Claude Code sessions (or human contributors) to get oriented quickly without re-reading the whole conversation history. Update this file whenever a significant change is made.
 >
-> **Last updated:** 2026-07-05
+> **Last updated:** 2026-07-10
 
 ---
 
@@ -12,7 +12,7 @@
 
 - Source of truth for intended design: `../design_handoff_carvault_app/` — `README.md` (screen-by-screen spec), `Car Docs App.dc.html` (interactive prototype), `CarVault Product Spec.dc.html` (PRD), design tokens (colors/type/spacing), `screenshots/`.
 - Two personas: **Aria** (private owner, opens the app a few times a year) and **Devan** (reseller, 10–15 vehicles/year, uses the app weekly).
-- v1 is deliberately **local-first** — no multi-device sync, no custom backend. Auth is the only network dependency (Firebase).
+- v1 was originally local-first with no multi-device sync; **that's since expanded** — the app now has a second network dependency, a WhatsApp-style scheduled backup of all vehicle/document data to the user's own Google Drive (one-way backup + manual restore, not live multi-device sync). See §3/§5/§6.
 - Goal: capture a document in under 30 seconds; find any vehicle's documents in one search.
 
 ---
@@ -33,8 +33,9 @@
 | Error handling | Custom sealed `Result<T>` / `Failure` types (`core/errors/`) | Every repository method returns `Result<T>`, forcing explicit success/failure handling; `Failure` subtypes: `AuthFailure`, `ValidationFailure`, `NetworkFailure`, `UnexpectedFailure` |
 | Folder structure | **Feature-first** (`lib/features/<feature>/{domain,data,presentation}`) + `lib/core/` for cross-cutting code | Scales better than layer-first as features grow; each feature is self-contained |
 | Clean architecture | Domain (entities, repository interfaces, use cases) → Data (models, datasources, repository impls) → Presentation (providers, screens, widgets) | Domain never imports Firebase/Drift/Dio; only the data layer touches those |
+| Cloud backup | `archive` (zip/unzip) + `googleapis`/`googleapis_auth` (Drive v3 client) + `extension_google_sign_in_as_googleapis_auth` (turns the existing `google_sign_in` session into an authenticated client) + `workmanager` (daily scheduling) | Backs up the local DB + document images to the user's own Google Drive on a schedule; reuses the existing Firebase Auth / Google Sign-In session rather than a new backend |
 
-**Deliberate exceptions to "core never depends on features":** `core/routing/auth_state_provider.dart` and `core/storage/secure_session_storage.dart` both depend on the auth feature's concrete types. This is intentional — routing/session-caching are cross-feature composition concerns, not reusable domain-agnostic code.
+**Deliberate exceptions to "core never depends on features":** `core/routing/auth_state_provider.dart` and `core/storage/secure_session_storage.dart` both depend on the auth feature's concrete types. This is intentional — routing/session-caching are cross-feature composition concerns, not reusable domain-agnostic code. The `backup` feature adds two more: `data/repositories/drive_auth_repository_impl.dart` and `data/repositories/backup_repository_impl.dart` both depend directly on `auth`'s concrete `FirebaseAuthDataSource`/`AuthRepository` — connecting Drive is inherently a composition of "which Google account" (auth) and "what to back up" (backup).
 
 ---
 
@@ -49,8 +50,9 @@
 - **Profile:** shows signed-in email, real Log Out.
 - **Bottom nav:** Home / Vehicles / Profile, each its own independent navigation stack.
 - **Native + Flutter splash screens:** both branded (background color + app-mark badge with car glyph) so there's no white flash before Flutter loads.
+- **Backup & Restore (Google Drive):** WhatsApp-style scheduled one-way backup + manual restore, not live multi-device sync. Connect Google Drive from Settings (incremental consent for Google-signed-in users, a separate Drive-only Google sign-in for email/password users that doesn't touch their Firebase identity) → daily backup at a user-chosen time via a self-rescheduling WorkManager task → zips the local DB + document images into one file, uploaded to a visible "CarVault Backups" folder in the user's own Drive (`drive.file` scope), atomically replacing the previous backup each run. A one-time "back up to Google Drive?" prompt appears on the Dashboard right after registration. Settings screen: enable/disable, connect/disconnect, backup time picker, "Back up now", "Restore latest backup" (behind a confirmation dialog — replaces all local data).
 
-**Explicitly not implemented (by design, not oversight):** onboarding (not in the design docs — user confirmed skip), deep links (nothing needs them yet, but the router is deep-link-ready), document deletion UI (use case exists, no screen wires it), delete-vehicle confirmation dialog, Share functionality, biometric app lock, cloud sync.
+**Explicitly not implemented (by design, not oversight):** onboarding (not in the design docs — user confirmed skip), deep links (nothing needs them yet, but the router is deep-link-ready), document deletion UI (use case exists, no screen wires it), delete-vehicle confirmation dialog, Share functionality, biometric app lock, automatic "restore backup?" prompt on fresh install (backup's restore is manual-only for v1 — see §7).
 
 ---
 
@@ -82,6 +84,7 @@ carvault_app/
 │   │   └── widgets/{buttons,inputs,nav}/      # shared design-system components
 │   └── features/
 │       ├── auth/           # domain + data + presentation — real Firebase Auth
+│       ├── backup/          # domain + data + presentation — Google Drive backup/restore + Settings screen
 │       ├── dashboard/       # domain + presentation (composes vehicles feature)
 │       ├── documents/       # Document Viewer screen
 │       ├── profile/         # Profile screen
@@ -90,7 +93,7 @@ carvault_app/
     └── result_dynamic_typing_test.dart  # regression test for the AuthController bug (§8)
 ```
 
-Full current file list: run `find lib -name "*.dart"` from the project root (92 Dart files as of this writing).
+Full current file list: run `find lib -name "*.dart"` from the project root (grew past 92 Dart files with the backup feature — re-run to get the current count).
 
 **Notable file-level history:**
 - `lib/features/auth/data/repositories/fake_auth_repository.dart` — existed temporarily (in-memory auth stand-in for early device testing before a real Firebase project existed), **deleted** once real Firebase Auth was wired up.
@@ -107,6 +110,10 @@ Full current file list: run `find lib -name "*.dart"` from the project root (92 
 - **`AddVehicleDraft` is reused for both the Add Vehicle flow and the Edit Vehicle screen** — same validation, same shape — rather than a parallel "EditDraft" type. Edit Vehicle owns its own local form state rather than sharing the global `addVehicleDraftProvider`, to avoid cross-contaminating an in-progress add flow.
 - **`VehicleModel`/`DocumentModel` (data layer) are distinct from `VehicleEntity`/`DocumentEntity` (domain layer)** — the data models carry `toJson`/`fromJson`/validation/Drift mapping; domain entities are plain and storage-agnostic. `AddVehicleDraft` deliberately has **no** serialization (it's transient in-memory form state, never persisted).
 - **Repository pattern isolates API / Local DB / Cache explicitly:** `AuthRepository` isolates API (Firebase) + Cache (secure session storage); `VehicleRepository` isolates Local DB (Drift) + Cache (document file cache) — no API, since there's no vehicle backend in v1.
+- **Backup is a self-rescheduling one-off WorkManager task, not `registerPeriodicTask`.** WorkManager's periodic tasks can't pin to a specific wall-clock time (only "every N hours from first registration"), which would drift from the user's chosen time faster than reschedule-on-completion does. Runs close to, not exactly at, the chosen time under Doze — an accepted tradeoff (no `SCHEDULE_EXACT_ALARM` permission needed), the same real-world behavior WhatsApp's own backup has.
+- **Drive-only Google sign-in reuses the single `GoogleSignIn` instance already owned by `FirebaseAuthDataSource`**, rather than a second instance. This means an email/password user's Drive connection is cleared on every app logout (`signOut()` already calls `_googleSignIn.signOut()` unconditionally) and must be reconnected — accepted deliberately, since running two live `GoogleSignIn` instances concurrently is unverified territory on Android and a bigger risk than this papercut.
+- **Backups are found by well-known folder/file name, not a remembered file ID** (`findOrCreateBackupFolder` searches for a folder named "CarVault Backups"; the backup file itself is `carvault_backup_<uid>.zip`). Required because `drive.file` scope only grants the app visibility into files *it* created — after a reinstall there's no local ID to look up by, so restore must search by name on a fresh OAuth grant.
+- **The WorkManager background isolate reinitializes everything from scratch** (`backup_callback_dispatcher.dart`): Firebase, `SharedPreferences`, a fresh `ProviderContainer`, and `GoogleSignIn.signInSilently()` to rehydrate Drive credentials — nothing carries over from the running app. This is the single highest-risk part of the feature; see §7/§8 for its on-device verification status.
 
 ---
 
@@ -120,6 +127,7 @@ Full current file list: run `find lib -name "*.dart"` from the project root (92 
 - **No custom REST API exists.** `core/network/ApiClient` (Dio + retry/timeout/auth-token/logging interceptors) is fully built and tested in isolation but not called by any feature.
 - **GitHub repo:** `https://github.com/khurrammhd/carvault_app` (public).
 - **CI/CD:** `.github/workflows/build-apk.yml` — on push to `main`, builds a debug APK on a GitHub-hosted Ubuntu runner and uploads it as the `app-debug-apk` artifact.
+- **Google Drive API** (project `carvault-e0e9a`): must be enabled in Google Cloud Console (APIs & Services → Library) — a manual, one-time console action, not something any code change can do. Scope used: `drive.file` (visible-to-the-user files only, not the hidden `drive.appdata` folder) — deliberate, so a "CarVault Backups" folder shows up in the user's own Drive. Backup file per user: `carvault_backup_<uid>.zip`, atomically replaced each run.
 
 ---
 
@@ -132,6 +140,10 @@ Full current file list: run `find lib -name "*.dart"` from the project root (92 
 - [ ] Set up a real release signing config before ever distributing outside of direct APK installs (currently release builds reuse the debug signing config, matching Flutter's own default template).
 - [ ] Consider SQLCipher encryption for the local database (currently unencrypted, relies on Android app-sandboxing only).
 - [ ] Consider a biometric app-lock, given the sensitivity of stored documents (raised in the original security review, never built).
+- [ ] **Enable the Google Drive API for project `carvault-e0e9a` in Google Cloud Console** — every Drive call 403s until this manual, one-time step is done (not something a code change can do).
+- [ ] On-device verification of the whole backup feature is still outstanding (blocked on local builds — see §8.4 — so this must go through GitHub Actions CI + `adb install`, same as every other change here): both connection paths (Google-signed-in incremental consent, email/password Drive-only sign-in), a real scheduled backup firing, force-stop/reboot survival, and a full restore-after-simulated-reinstall.
+- [ ] Consider auto-detecting an existing backup on fresh install and offering to restore it (currently restore is manual-only, reachable from Settings).
+- [ ] If backup archives grow large enough that a background upload risks being killed as a long-running task, consider a foreground service + notification (Android 13+ `POST_NOTIFICATIONS`) — not needed for the small datasets expected today.
 
 ---
 
@@ -152,7 +164,9 @@ These were real bugs found and fixed; listed so they aren't accidentally reintro
 
 ## 9. Next Steps
 
-1. Confirm the latest build (native splash + all auth fixes + real OAuth client) installs and works correctly on-device — both email/password and Google Sign-In.
-2. Work through the Pending Tasks list (§7) roughly in priority order: delete confirmation dialog and document deletion UI are the most user-facing gaps.
-3. If/when a custom backend is ever introduced (the PRD flags cloud sync as "worth revisiting" post-v1), `core/network/ApiClient` is the ready seam — no repository interfaces need to change, only their implementations gain a remote data source alongside the existing local one.
-4. Keep this file updated after any further significant change — new features, architecture changes, newly discovered bugs, or newly resolved ones.
+1. **Enable the Google Drive API for `carvault-e0e9a`** in Google Cloud Console (§7) — nothing Drive-related will work until this is done.
+2. Push the backup feature to `main`, let CI build it, and work through the on-device verification list in §7 — this code has passed `flutter analyze` and the existing test suite locally, but the Drive auth flows, the WorkManager background isolate, and restore have **not yet been exercised on a real device**.
+3. Confirm the latest build (native splash + all auth fixes + real OAuth client) installs and works correctly on-device — both email/password and Google Sign-In.
+4. Work through the rest of the Pending Tasks list (§7) roughly in priority order: delete confirmation dialog and document deletion UI are the most user-facing gaps.
+5. If/when a custom backend is ever introduced beyond Drive backup, `core/network/ApiClient` is the ready seam — no repository interfaces need to change, only their implementations gain a remote data source alongside the existing local one.
+6. Keep this file updated after any further significant change — new features, architecture changes, newly discovered bugs, or newly resolved ones.

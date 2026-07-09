@@ -26,6 +26,28 @@ class VehicleLocalDataSource {
     });
   }
 
+  /// One-shot equivalent of [watchVehiclesWithDocuments], for the backup
+  /// feature's export — a live `Stream` isn't the right shape for "read
+  /// everything once and zip it up".
+  Future<List<VehicleWithDocuments>> fetchAllVehiclesWithDocuments() async {
+    final vehicles = await _db.select(_db.vehicles).get();
+    final documents = await _db.select(_db.documents).get();
+    return vehicles.map((vehicle) {
+      final docs = documents.where((d) => d.vehicleId == vehicle.id).toList()
+        ..sort((a, b) => b.uploadedAt.compareTo(a.uploadedAt));
+      return VehicleWithDocuments(vehicle: vehicle, documents: docs);
+    }).toList();
+  }
+
+  /// Deletes every vehicle row — documents cascade via the existing FK.
+  /// Used by restore to replace local data with a downloaded backup.
+  Future<void> clearAll() => _db.delete(_db.vehicles).go();
+
+  /// Exposes Drift's transaction wrapper so restore can clear + re-insert
+  /// atomically, without the backup feature reaching into [AppDatabase]
+  /// directly.
+  Future<void> transaction(Future<void> Function() action) => _db.transaction(action);
+
   Future<void> insertVehicle(VehiclesCompanion companion) {
     return _db.into(_db.vehicles).insert(companion);
   }

@@ -5,6 +5,7 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/errors/unit.dart';
 import '../../../../core/storage/secure_session_storage.dart';
+import '../../domain/entities/google_sign_in_result.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/firebase_auth_datasource.dart';
@@ -50,14 +51,15 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Result<UserEntity?>> loginWithGoogle() async {
+  Future<Result<GoogleSignInResult?>> loginWithGoogle() async {
     try {
-      final user = await _dataSource.signInWithGoogle();
+      final credential = await _dataSource.signInWithGoogle();
+      final user = credential?.user;
       if (user == null) return const Success(null); // cancelled — not a failure
 
       final entity = UserModel.fromFirebaseUser(user).toEntity();
       await _sessionStorage.saveLastSession(UserModel.fromEntity(entity));
-      return Success(entity);
+      return Success(GoogleSignInResult(user: entity, isNewUser: credential!.additionalUserInfo?.isNewUser ?? false));
     } on FirebaseAuthException catch (e) {
       return Failed(mapFirebaseAuthException(e));
     } catch (e) {

@@ -12,12 +12,14 @@ class UserModel {
     required this.email,
     this.displayName,
     this.photoUrl,
+    this.isGoogleUser = false,
   });
 
   final String id;
   final String email;
   final String? displayName;
   final String? photoUrl;
+  final bool isGoogleUser;
 
   /// The only place outside [FirebaseAuthDataSource] that reads Firebase's
   /// `User` type directly.
@@ -27,6 +29,7 @@ class UserModel {
       email: user.email ?? '',
       displayName: user.displayName,
       photoUrl: user.photoURL,
+      isGoogleUser: user.providerData.any((p) => p.providerId == 'google.com'),
     );
   }
 
@@ -44,6 +47,7 @@ class UserModel {
       email: email,
       displayName: json['displayName'] as String?,
       photoUrl: json['photoUrl'] as String?,
+      isGoogleUser: json['isGoogleUser'] as bool? ?? false,
     );
   }
 
@@ -52,6 +56,7 @@ class UserModel {
         'email': email,
         'displayName': displayName,
         'photoUrl': photoUrl,
+        'isGoogleUser': isGoogleUser,
       };
 
   Result<UserModel> validate() {
@@ -62,9 +67,16 @@ class UserModel {
     return Success(this);
   }
 
-  UserEntity toEntity() => UserEntity(id: id, email: email, displayName: displayName, photoUrl: photoUrl);
+  UserEntity toEntity() =>
+      UserEntity(id: id, email: email, displayName: displayName, photoUrl: photoUrl, isGoogleUser: isGoogleUser);
 
   factory UserModel.fromEntity(UserEntity entity) {
-    return UserModel(id: entity.id, email: entity.email, displayName: entity.displayName, photoUrl: entity.photoUrl);
+    return UserModel(
+      id: entity.id,
+      email: entity.email,
+      displayName: entity.displayName,
+      photoUrl: entity.photoUrl,
+      isGoogleUser: entity.isGoogleUser,
+    );
   }
 }
