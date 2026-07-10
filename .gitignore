@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Release signing secrets — unlike the debug keystore (deliberately
+# committed, see PROJECT_CONTEXT.md §6), the upload keystore and its
+# passwords must never be committed. CI reconstructs both from GitHub
+# Actions secrets at build time (see .github/workflows/build-release-aab.yml).
+/android/key.properties
+/android/keystores/upload-keystore.jks

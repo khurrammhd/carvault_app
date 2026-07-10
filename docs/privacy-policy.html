@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CarVault Privacy Policy</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+    line-height: 1.6;
+    color: #1e1a16;
+    background: #f8f4f1;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #f1ece7; background: #16130f; }
+    a { color: #ffb27a; }
+    .meta { color: #b8afa6; }
+    hr { border-color: #3a332c; }
+  }
+  h1 { font-size: 1.75rem; margin-bottom: 4px; }
+  h2 { font-size: 1.15rem; margin-top: 2.25em; }
+  .meta { color: #635c57; font-size: 0.9rem; margin-top: 0; }
+  a { color: #af4803; }
+  ul { padding-left: 1.25em; }
+  li { margin-bottom: 0.4em; }
+  hr { border: none; border-top: 1px solid #ddd6d1; margin: 2.5em 0; }
+</style>
+</head>
+<body>
+
+<h1>CarVault Privacy Policy</h1>
+<p class="meta">Last updated: July 10, 2026</p>
+
+<p>
+  CarVault ("the app") is a mobile app for photographing and organizing vehicle
+  documents (registration certificates and related paperwork). This page explains
+  what data the app collects, why, and how you're in control of it.
+</p>
+
+<h2>Who runs this</h2>
+<p>
+  CarVault is developed by an independent developer, contactable at
+  <a href="mailto:khurram.mhd@gmail.com">khurram.mhd@gmail.com</a> for any question
+  about this policy or your data.
+</p>
+
+<h2>What the app collects</h2>
+<ul>
+  <li>
+    <strong>Account email address</strong> — collected when you sign in, via either
+    email/password or Google Sign-In (Firebase Authentication). Used only to identify
+    your account and secure your data; never used for marketing.
+  </li>
+  <li>
+    <strong>Vehicle and document data you enter</strong> — registration number, make,
+    model, year, category (Buy/Sell), notes, and photos of documents you capture with
+    the camera or choose from your gallery. This stays on your device by default,
+    stored in the app's private sandboxed storage.
+  </li>
+  <li>
+    <strong>Google Drive backup (optional, off by default)</strong> — if you turn on
+    backup in Settings, the same vehicle/document data and images are uploaded to a
+    "CarVault Backups" folder created in <em>your own</em> Google Drive. The app only
+    requests access to files it creates itself (Google's <code>drive.file</code>
+    permission scope) — it cannot see, read, or modify any other file in your Drive.
+    This data is stored under your Google account, subject to your own Google Account
+    settings and storage quota, not on any server we operate.
+  </li>
+  <li>
+    <strong>Camera access</strong> — used only when you actively choose to photograph
+    a document. The app does not access the camera in the background.
+  </li>
+  <li>
+    <strong>Basic crash/diagnostic data</strong> — via Firebase Crashlytics, in
+    published builds only, to help fix bugs. This includes device model, OS version,
+    app version, and the technical details of any crash — not your documents or
+    personal data.
+  </li>
+</ul>
+
+<h2>What the app does <em>not</em> do</h2>
+<ul>
+  <li>No advertising and no ad-tracking SDKs.</li>
+  <li>No analytics or behavioral tracking beyond crash diagnostics above.</li>
+  <li>No selling, renting, or sharing your data with third parties.</li>
+  <li>No access to your Google Drive beyond the single backup file/folder the app itself creates.</li>
+</ul>
+
+<h2>Your control over this data</h2>
+<ul>
+  <li>Turn Google Drive backup off, or disconnect your Google account, anytime from Settings.</li>
+  <li>Delete a vehicle or document at any time from within the app.</li>
+  <li>Delete the app to remove all data stored on your device.</li>
+  <li>Delete your Drive backup file directly from Google Drive, independent of the app.</li>
+  <li>Request deletion of your account and any associated data by emailing <a href="mailto:khurram.mhd@gmail.com">khurram.mhd@gmail.com</a>.</li>
+</ul>
+
+<h2>Data security</h2>
+<p>
+  Local data lives in the app's private, sandboxed storage on your device. Sign-in is
+  handled by Firebase Authentication. Backup data, when enabled, is transmitted over
+  an encrypted connection directly to Google Drive, authenticated as you.
+</p>
+
+<h2>Children's privacy</h2>
+<p>
+  CarVault is not directed at children and is not knowingly used to collect data from
+  anyone under 13.
+</p>
+
+<h2>Changes to this policy</h2>
+<p>
+  If this policy changes, the "Last updated" date above will change accordingly.
+  Material changes will be reflected in the app's release notes.
+</p>
+
+<hr>
+<p class="meta">
+  CarVault — Vehicle Document Manager · <a href="https://github.com/khurrammhd/carvault_app">Source on GitHub</a>
+</p>
+
+</body>
+</html>
