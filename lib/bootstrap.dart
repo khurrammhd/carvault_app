@@ -32,7 +32,10 @@ Future<void> bootstrap(Environment environment) async {
       final prefs = await SharedPreferences.getInstance();
       final appPreferences = AppPreferences(prefs);
 
-      await Workmanager().initialize(backupCallbackDispatcher, isInDebugMode: !environment.isProduction);
+      // `isInDebugMode` is deprecated in workmanager 0.9.x and has no
+      // effect (superseded by WorkmanagerDebug handlers) — omitted rather
+      // than passed as a no-op.
+      await Workmanager().initialize(backupCallbackDispatcher);
       // Defensively re-schedule on every app start: covers a scheduled
       // task lost to a force-stop that's since been cleared by the user
       // simply reopening the app — WorkManager gives no other signal that

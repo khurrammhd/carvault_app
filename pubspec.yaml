@@ -49,7 +49,7 @@ dependencies:
   googleapis: ^13.2.0
   googleapis_auth: ^2.3.3
   extension_google_sign_in_as_googleapis_auth: ^2.0.13
-  workmanager: ^0.5.2
+  workmanager: ^0.9.0+3
 
 dev_dependencies:
   flutter_test:
