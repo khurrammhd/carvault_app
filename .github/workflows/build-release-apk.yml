@@ -38,7 +38,11 @@ jobs:
           storeFile=../keystores/upload-keystore.jks
           EOF
 
-      - run: flutter build apk --release
+      # -t main_production.dart: lib/main.dart (the default entry point)
+      # hardcodes Environment.development, which would ship the debug
+      # banner, "(Dev)" title suffix, and disabled Crashlytics reporting
+      # even in this signed release build.
+      - run: flutter build apk --release -t lib/main_production.dart
 
       - uses: actions/upload-artifact@v4
         with:
