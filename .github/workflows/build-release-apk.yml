@@ -1,0 +1,50 @@
+name: Build Release APK
+
+# Manual only — a signed release build is a deliberate action, not
+# something that should fire on every push like the debug APK workflow.
+# Produces a sideloadable release APK (installable directly on a device via
+# adb/file transfer), unlike build-release-aab.yml's .aab output which only
+# installs through the Play Store or bundletool.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: dart run build_runner build --delete-conflicting-outputs
+
+      # Reconstructs the upload keystore + key.properties from GitHub
+      # Actions secrets — neither is committed to the repo (see
+      # android/.gitignore + PROJECT_CONTEXT.md §6). Both are deleted at
+      # the end of the job regardless of build outcome. Same secrets as
+      # build-release-aab.yml — both workflows sign with the same upload key.
+      - name: Restore upload keystore
+        run: |
+          mkdir -p android/keystores
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/keystores/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=../keystores/upload-keystore.jks
+          EOF
+
+      - run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Clean up signing secrets
+        if: always()
+        run: rm -f android/keystores/upload-keystore.jks android/key.properties
